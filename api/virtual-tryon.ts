@@ -9,7 +9,7 @@ export default async function handler({req, res}:any) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  
+
   try {
     const {
       userImageBase64,
@@ -40,8 +40,13 @@ export default async function handler({req, res}:any) {
       success: true,
       image: Array.isArray(output) ? output[0] : output,
     });
-  } catch (error) {
-    console.error("TRYON ERROR:", error);
-    res.status(500).json({ error: "Try-on failed" });
-  }
+  } catch (err) {
+  console.error("REPLICATE ERROR:", err);
+
+  res.setHeader("Content-Type", "application/json");
+  res.status(500).json({
+    error: "Try-on failed",
+    message: err || "Unknown error",
+  });
+}
 }
