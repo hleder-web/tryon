@@ -9,6 +9,7 @@ export default async function handler({req, res}:any) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  
   try {
     const {
       userImageBase64,
