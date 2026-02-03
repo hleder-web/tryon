@@ -19,7 +19,7 @@ export default async function handler({req, res}:any) {
     if (!userImageBase64 || !garmentImageUrl) {
       return res.status(400).json({ error: "Missing images" });
     }
-
+    console.log("TOKEN EXISTS?", !!process.env.REPLICATE_API_TOKEN);
     const output = await replicate.run(
       "cuuupid/idm-vton:0513734a452173b8173e907e3a59d19a36266e55b48528559432bd21c7d7e985",
       {
