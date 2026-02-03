@@ -14,33 +14,32 @@ export default async function handler(
 
     if (!userImageUrl || !garmentImageUrl) {
       return res.status(400).json({
-        error: 'userImageUrl e garmentImageUrl são obrigatórios'
+        error: 'userImageUrl e garmentImageUrl são obrigatórios',
       })
     }
 
-    // 🔐 Auth Google
+    // 🔐 Google Auth
     const serviceAccount = JSON.parse(
       process.env.GCP_SERVICE_ACCOUNT_JSON as string
     )
+
     const client = new JWT({
-        email: serviceAccount.client_email,
-        key: serviceAccount.private_key,
-        scopes: ['https://www.googleapis.com/auth/cloud-platform'],
-      })
-      
-      const accessTokenResponse = await client.getAccessToken()
-      
-      if (!accessTokenResponse.token) {
-        throw new Error('Failed to get access token')
-      }
-      
-      const token = accessTokenResponse.token
-      
+      email: serviceAccount.client_email,
+      key: serviceAccount.private_key,
+      scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+    })
 
- 
-    const endpoint = `https://${process.env.GCP_LOCATION}-aiplatform.googleapis.com/v1/projects/${process.env.GCP_PROJECT_ID}/locations/${process.env.GCP_LOCATION}/publishers/google/models/imagegeneration@002:predict`
+    const accessTokenResponse = await client.getAccessToken()
+    const token = accessTokenResponse.token
 
-    const response = await fetch(endpoint, {
+    if (!token) {
+      throw new Error('Failed to obtain access token')
+    }
+
+    // 🎯 ENDPOINT CORRETO DO VIRTUAL TRY-ON
+    const endpoint = `https://${process.env.GCP_LOCATION}-aiplatform.googleapis.com/v1/projects/${process.env.GCP_PROJECT_ID}/locations/${process.env.GCP_LOCATION}/publishers/google/models/imagegeneration@virtual-try-on:predict`
+
+    const vertexResponse = await fetch(endpoint, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -49,24 +48,29 @@ export default async function handler(
       body: JSON.stringify({
         instances: [
           {
-            prompt: 'virtual try on',
-            image: {
+            personImage: {
               gcsUri: userImageUrl,
             },
-            garment: {
-              imageUri: garmentImageUrl,
+            garmentImage: {
+              gcsUri: garmentImageUrl,
             },
           },
         ],
-        parameters: {
-          sampleCount: 1,
-        },
       }),
     })
 
-    const data = await response.json()
+    const text = await vertexResponse.text()
 
-    return res.status(200).json(data)
+    // 🔍 Se não for JSON, mostramos o HTML pra debug
+    if (!vertexResponse.ok) {
+      return res.status(vertexResponse.status).json({
+        error: 'Vertex error',
+        status: vertexResponse.status,
+        rawResponse: text.slice(0, 500),
+      })
+    }
+
+    return res.status(200).json(JSON.parse(text))
   } catch (err: any) {
     console.error(err)
     return res.status(500).json({
