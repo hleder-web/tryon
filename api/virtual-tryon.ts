@@ -4,6 +4,7 @@ import Replicate from 'replicate'
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN!,
 })
+ 
 
 const MODEL =
   'cuuupid/idm-vton:COLE_AQUI_O_VERSION_ID_DO_MODELO'
