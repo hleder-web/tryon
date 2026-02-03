@@ -7,7 +7,7 @@ const replicate = new Replicate({
  
 
 const MODEL =
-  'cuuupid/idm-vton:COLE_AQUI_O_VERSION_ID_DO_MODELO'
+  'cuuupid/idm-vton:e3893af4fb4bd5741752b35b395348c5f7a9ab5c4776264f5d38e41418081ed7'
 
 export default async function handler(
   req: VercelRequest,
